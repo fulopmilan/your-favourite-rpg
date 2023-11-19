@@ -13,8 +13,14 @@ interface UserProp {
 export const Match: React.FC<MatchProps> = ({ userIDs }) => {
 
     const [users, setUsers] = useState<UserProp[]>([]);
+    const [userMessage, setUserMessage] = useState<string>("");
 
-    //initialize the users array
+    //static
+    const [storyText, setStoryText] = useState<string>("");
+    //gets typed slowly by static
+    const [storyDisplay, setStoryDisplay] = useState<string>("");
+
+    //initialization
     useEffect(() => {
         const initialUsers = userIDs.map(userID => ({
             userID,
@@ -23,12 +29,32 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
         }));
         setUsers(initialUsers);
 
+        socket.emit('readyToContinue');
     }, [userIDs])
 
-    const [userMessage, setUserMessage] = useState<string>("");
+
+    //when storyText changes
+    useEffect(() => {
+        let counter = 0;
+
+        const displayText = () => {
+            if (counter < storyText.length) {
+                setStoryDisplay((prevDisplay) => prevDisplay + storyText[counter - 1]);
+                counter += 1;
+                setTimeout(displayText, 50);
+            }
+            else {
+                //it finished
+            }
+        };
+
+        setStoryDisplay('');
+        displayText();
+    }, [storyText]);
+
 
     useEffect(() => {
-        const receiveMessage = (userMessage: string, userID: string) => {
+        const receiveUserMessage = (userMessage: string, userID: string) => {
             setUsers(prevUsers => {
                 const updatedUsers = prevUsers.map(user => {
                     if (user.userID === userID) {
@@ -40,16 +66,25 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
             });
         }
 
-        socket.on('receiveMessage', receiveMessage);
+        const getStoryText = (newStoryText: string) => {
+            console.log("XD")
+            setStoryText(newStoryText)
+        }
+
+        socket.on('receiveUserMessage', receiveUserMessage);
+        socket.on('getStoryText', getStoryText);
         return () => {
-            socket.off('receiveMessage', receiveMessage);
+            socket.off('receiveUserMessage', receiveUserMessage);
+            socket.off('getStoryText', getStoryText);
         }
     }, [users])
+
 
     const onChange = (v: React.FormEvent<HTMLInputElement>) => {
         setUserMessage(v.currentTarget.value);
         socket.emit("userMessageChange", v.currentTarget.value);
     }
+
 
     return (
         <div>
@@ -69,6 +104,8 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
                     )}
                 </div>
             ))}
+            <p>Story</p>
+            {storyDisplay}
         </div>
     )
 }
