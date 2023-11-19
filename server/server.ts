@@ -1,4 +1,15 @@
+//#region imports & requirements
 import { Socket } from "socket.io";
+
+//DOTENV
+require('dotenv').config();
+
+//OpenAI
+const OpenAIApi = require('openai');
+const openai = new OpenAIApi({
+    apiKey: process.env.OPENAI_API_KEY
+});
+//
 
 const express = require('express');
 const app = express();
@@ -7,9 +18,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const server = http.createServer(app);
-
-//DOTENV
-require('dotenv').config();
 
 //CORS
 const cors = require('cors');
@@ -27,18 +35,57 @@ const io = new Server(server, {
         allowedHeaders: ["Authorization", "Content-Type"],
     }
 });
+//#endregion
 
 interface RoomData {
     hasMatchStarted: Boolean;
     readyPlayers: number;
 }
+interface MessageData {
+    role: string;
+    content: string;
+}
 
 const roomData: { [roomId: string]: RoomData } = {};
-let storyText = `xddaaaaaaadaaaaaaaaaaaaaaaad.`;
+
+async function callAi(messages: MessageData[], storyText: string, roomId: string) {
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "gpt-3.5-turbo",
+            messages: messages,
+        });
+
+        const answer = completion.choices[0].message.content;
+        if (answer !== "") {
+            io.to(roomId).emit("getStoryText", answer);
+        }
+    } catch (error: any) {
+        console.error("Error calling OpenAI API:", error.message);
+    }
+}
 
 io.on("connection", (socket: Socket) => {
     socket.on('joinRoom', (roomId) => {
+        const messageData: MessageData[] = [
+            { role: "system", content: "you're an RPG game master. I provide character names, you write a very short story. I'll respond with a character's action. Your response should end with the sentence 'What will you do next?' Characters have 1 action per your message. Keep it brief and easy for new English speakers. Avoid uncommon words." }
+        ];
+        let storyText = "placeholder";
         //console.log(socket.id + " joined to room " + roomId)
+
+        const updateUserList = () => {
+            const usersInRoomSet = io.sockets.adapter.rooms.get(roomId);
+
+            //check if usersInRoomSet is defined and is a Set
+            if (usersInRoomSet instanceof Set) {
+
+                const usersInRoom = Array.from(usersInRoomSet);
+                const nicknamesInRoom = usersInRoom.map(socketId => io.sockets.sockets.get(socketId).data.nickname);
+
+                io.to(roomId).emit("updateUserList", usersInRoom, nicknamesInRoom);
+            } else {
+                console.log("room does not exist or is empty.");
+            }
+        }
 
         //#region joining/creating server
         //create a room if it doesn't exist yet
@@ -54,24 +101,24 @@ io.on("connection", (socket: Socket) => {
 
         //check user count and determine if the room is full 
         //check if the match has started yet
-        if (playersInRoom + 1 <= 4 && !roomData[roomId].hasMatchStarted) {
+        if ((playersInRoom + 1) <= 4 && !roomData[roomId].hasMatchStarted) {
+
             socket.join(roomId);
 
-            const usersInRoomSet = io.sockets.adapter.rooms.get(roomId);
-
-            // Check if usersInRoomSet is defined and is a Set
-            if (usersInRoomSet instanceof Set) {
-                const usersInRoom = Array.from(usersInRoomSet);
-                io.to(roomId).emit("updateUserList", usersInRoom);
-            } else {
-                console.log("Room does not exist or is empty.");
-            }
+            //give player initial nickname
+            socket.data.nickname = socket.id;
+            updateUserList();
         }
         else {
             //TODO: redirect this client with a message
             console.log("Error joining the room for user " + socket.id)
         }
         //#endregion
+
+        socket.on('rename', (newName: string) => {
+            socket.data.nickname = newName;
+            updateUserList();
+        })
 
         socket.on('startMatch', () => {
             io.to(roomId).emit("onStartMatch");
@@ -88,22 +135,45 @@ io.on("connection", (socket: Socket) => {
             if (readyPlayers >= playersInRoom) {
 
                 if (users) {
-                    const userMessages: string[] = [];
+                    let userMessages: { userName: string, message: string }[] = [];
 
                     users.forEach((
                         user: {
                             userID: string;
-                            userName: string;
+                            nickname: string;
                             message: string;
                         }) => {
-                        userMessages.push(user.message);
+
+                        userMessages.push({ userName: user.nickname, message: user.message });
                     });
 
-                    console.log(userMessages);
-                }
+                    let sortedUserMessage: string = "";
 
-                //TODO: SWITCH OUT WITH API, ADD ASYNC
-                io.to(roomId).emit("getStoryText", storyText);
+                    userMessages.forEach(userMessage => {
+                        sortedUserMessage += userMessage.userName + ":" + userMessage.message + ",";
+                    });
+
+                    messageData.push({ role: "user", content: sortedUserMessage });
+                    callAi(messageData, storyText, roomId)
+                }
+                else {
+                    //very first round of the match
+
+                    //get every nickname in the room
+                    const usersInRoomSet = io.sockets.adapter.rooms.get(roomId);
+                    if (usersInRoomSet instanceof Set) {
+                        const usersInRoom = Array.from(usersInRoomSet);
+                        const nicknamesInRoom = usersInRoom.map(socketId => io.sockets.sockets.get(socketId).data.nickname);
+                        let nicknames: string = "names:";
+
+                        nicknamesInRoom.forEach(nickname => {
+                            nicknames += '"' + nickname + '"' + ",";
+                        });
+
+                        messageData.push({ role: "user", content: nicknames });
+                        callAi(messageData, storyText, roomId)
+                    }
+                }
 
                 //reset for the next call
                 readyPlayers = 0;
@@ -123,10 +193,7 @@ io.on("connection", (socket: Socket) => {
             if (playersInRoomSet?.size === undefined) {
                 roomData[roomId].hasMatchStarted = false;
             }
-            if (playersInRoomSet instanceof Set) {
-                const usersInRoom = Array.from(playersInRoomSet);
-                io.to(roomId).emit("updateUserList", usersInRoom);
-            }
+            updateUserList();
         })
     })
 })

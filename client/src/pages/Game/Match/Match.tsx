@@ -3,14 +3,15 @@ import { socket } from '../../../data/socket';
 
 interface MatchProps {
     userIDs: string[];
+    nicknames: string[]
 }
 interface UserProp {
     userID: string;
-    userName: string;
+    nickname: string;
     message: string;
 }
 
-export const Match: React.FC<MatchProps> = ({ userIDs }) => {
+export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
 
     const [users, setUsers] = useState<UserProp[]>([]);
     const [userMessage, setUserMessage] = useState<string>("");
@@ -23,11 +24,16 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
     //timer after the text finishes displaying
     const [timer, setTimer] = useState<number>(0);
 
+    const usersRef = useRef(users);
+    useEffect(() => {
+        usersRef.current = users;
+    }, [users]);
+
     //#region initialization
     useEffect(() => {
-        const initialUsers = userIDs.map(userID => ({
+        const initialUsers = userIDs.map((userID, index) => ({
             userID,
-            userName: userID,
+            nickname: nicknames[index],
             message: "",
         }));
         setUsers(initialUsers);
@@ -51,6 +57,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
         }
 
         const getStoryText = (newStoryText: string) => {
+            console.log(newStoryText);
             setStoryText(newStoryText)
         }
 
@@ -62,11 +69,6 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
         }
     }, [users])
     //#endregion
-
-    const usersRef = useRef(users);
-    useEffect(() => {
-        usersRef.current = users;
-    }, [users]);
 
     //#region after the text has finished displaying, this timer will start
     let counter = 0;
@@ -80,6 +82,8 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
         }
         else {
             counter = 0;
+            setTimer(0);
+            setUserMessage('');
             socket.emit('readyToContinue', usersRef.current);
         }
     }
@@ -93,9 +97,10 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
             if (counter < storyText.length) {
                 setStoryDisplay((prevDisplay) => prevDisplay + storyText[counter - 1]);
                 counter += 1;
-                setTimeout(displayText, 50);
+                setTimeout(displayText, 35);
             }
             else if (storyText.length !== 0) {
+                counter = 0;
                 waitBeforeAction();
             }
         };
@@ -116,7 +121,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
             <h1>Match</h1>
             {users.map(user => (
                 <div>
-                    {user.userID}:
+                    {user.nickname}:
                     {user.userID === socket.id ? (
                         <input
                             onChange={onChange}

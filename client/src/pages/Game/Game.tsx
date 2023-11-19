@@ -13,14 +13,16 @@ export const Game = () => {
 
     const [didMatchStart, setDidMatchStart] = useState<boolean>(false);
     const [userList, setUserList] = useState<string[]>(["", ""]);
+    const [nicknameList, setNicknameList] = useState<string[]>(["", ""]);
 
     //receive data from server
     useEffect(() => {
         const startMatch = () => {
             setDidMatchStart(true);
         }
-        const updateUserList = (newUserList: string[]) => {
-            setUserList(newUserList);
+        const updateUserList = (usersInRoom: string[], nicknamesInRoom: string[]) => {
+            setUserList(usersInRoom);
+            setNicknameList(nicknamesInRoom);
         }
 
         socket.on("onStartMatch", startMatch)
@@ -34,7 +36,11 @@ export const Game = () => {
 
     return (
         <div>
-            {didMatchStart ? <Match userIDs={userList} /> : <Lobby userIDs={userList} />}
+            {didMatchStart ?
+                <Match userIDs={userList} nicknames={nicknameList} />
+                :
+                <Lobby userIDs={userList} nicknames={nicknameList} />
+            }
         </div>
     )
 }
