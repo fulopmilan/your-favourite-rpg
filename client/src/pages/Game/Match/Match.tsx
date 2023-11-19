@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { socket } from '../../../data/socket';
 
 interface MatchProps {
@@ -15,12 +15,15 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
     const [users, setUsers] = useState<UserProp[]>([]);
     const [userMessage, setUserMessage] = useState<string>("");
 
-    //static
+    //static for storing
     const [storyText, setStoryText] = useState<string>("");
-    //gets typed slowly by static
+    //typed for displaying
     const [storyDisplay, setStoryDisplay] = useState<string>("");
 
-    //initialization
+    //timer after the text finishes displaying
+    const [timer, setTimer] = useState<number>(0);
+
+    //#region initialization
     useEffect(() => {
         const initialUsers = userIDs.map(userID => ({
             userID,
@@ -31,28 +34,9 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
 
         socket.emit('readyToContinue');
     }, [userIDs])
+    //#endregion
 
-
-    //when storyText changes
-    useEffect(() => {
-        let counter = 0;
-
-        const displayText = () => {
-            if (counter < storyText.length) {
-                setStoryDisplay((prevDisplay) => prevDisplay + storyText[counter - 1]);
-                counter += 1;
-                setTimeout(displayText, 50);
-            }
-            else {
-                //it finished
-            }
-        };
-
-        setStoryDisplay('');
-        displayText();
-    }, [storyText]);
-
-
+    //#region receiving server-side functions
     useEffect(() => {
         const receiveUserMessage = (userMessage: string, userID: string) => {
             setUsers(prevUsers => {
@@ -67,7 +51,6 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
         }
 
         const getStoryText = (newStoryText: string) => {
-            console.log("XD")
             setStoryText(newStoryText)
         }
 
@@ -78,16 +61,58 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
             socket.off('getStoryText', getStoryText);
         }
     }, [users])
+    //#endregion
 
+    const usersRef = useRef(users);
+    useEffect(() => {
+        usersRef.current = users;
+    }, [users]);
+
+    //#region after the text has finished displaying, this timer will start
+    let counter = 0;
+    const waitBeforeAction = () => {
+        if (counter < 10) {
+            setTimeout(() => {
+                setTimer((prevTimer) => prevTimer + 1)
+                counter++;
+                waitBeforeAction();
+            }, 1000)
+        }
+        else {
+            counter = 0;
+            socket.emit('readyToContinue', usersRef.current);
+        }
+    }
+    //#endregion
+
+    //#region when storyText changes
+    useEffect(() => {
+        let counter = 0;
+
+        const displayText = () => {
+            if (counter < storyText.length) {
+                setStoryDisplay((prevDisplay) => prevDisplay + storyText[counter - 1]);
+                counter += 1;
+                setTimeout(displayText, 50);
+            }
+            else if (storyText.length !== 0) {
+                waitBeforeAction();
+            }
+        };
+
+        setStoryDisplay('');
+        displayText();
+    }, [storyText]);
+    //#endregion
 
     const onChange = (v: React.FormEvent<HTMLInputElement>) => {
         setUserMessage(v.currentTarget.value);
         socket.emit("userMessageChange", v.currentTarget.value);
     }
 
-
     return (
         <div>
+            {timer}
             <h1>Match</h1>
             {users.map(user => (
                 <div>

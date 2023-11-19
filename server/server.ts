@@ -34,7 +34,7 @@ interface RoomData {
 }
 
 const roomData: { [roomId: string]: RoomData } = {};
-const storyText = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam fermentum ligula urna, quis vulputate erat condimentum at. Praesent sed vehicula nunc. Maecenas bibendum nulla et feugiat tincidunt. Suspendisse potenti. Phasellus in velit ipsum. Donec eget lectus eu velit viverra fermentum in ac dui. Nulla gravida ultricies est eu consectetur.`;
+let storyText = `xddaaaaaaadaaaaaaaaaaaaaaaad.`;
 
 io.on("connection", (socket: Socket) => {
     socket.on('joinRoom', (roomId) => {
@@ -79,22 +79,40 @@ io.on("connection", (socket: Socket) => {
             roomData[roomId].hasMatchStarted = true;
         });
 
-        socket.on('readyToContinue', () => {
+        socket.on('readyToContinue', (users?) => {
             roomData[roomId].readyPlayers++;
 
             let playersInRoom = io.sockets.adapter.rooms.get(roomId)?.size;
             let readyPlayers = roomData[roomId].readyPlayers;
 
             if (readyPlayers >= playersInRoom) {
+
+                if (users) {
+                    const userMessages: string[] = [];
+
+                    users.forEach((
+                        user: {
+                            userID: string;
+                            userName: string;
+                            message: string;
+                        }) => {
+                        userMessages.push(user.message);
+                    });
+
+                    console.log(userMessages);
+                }
+
+                //TODO: SWITCH OUT WITH API, ADD ASYNC
                 io.to(roomId).emit("getStoryText", storyText);
 
-                //reset the ready players for the next call
+                //reset for the next call
+                readyPlayers = 0;
                 roomData[roomId].readyPlayers = 0;
             }
         })
 
         socket.on('userMessageChange', (userMessage) => {
-            io.to(roomId).emit("receiveMessage", userMessage, socket.id)
+            io.to(roomId).emit("receiveUserMessage", userMessage, socket.id)
         })
 
         socket.on('disconnect', () => {
