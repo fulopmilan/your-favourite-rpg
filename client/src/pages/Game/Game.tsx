@@ -25,6 +25,7 @@ export const Game = () => {
 
         socket.on("onStartMatch", startMatch)
         socket.on("updateUserList", updateUserList)
+
         return () => {
             socket.off("onStartMatch", startMatch);
             socket.off("updateUserList", updateUserList);

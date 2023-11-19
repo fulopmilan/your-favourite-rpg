@@ -39,6 +39,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
                 return updatedUsers;
             });
         }
+
         socket.on('receiveMessage', receiveMessage);
         return () => {
             socket.off('receiveMessage', receiveMessage);
@@ -53,11 +54,19 @@ export const Match: React.FC<MatchProps> = ({ userIDs }) => {
     return (
         <div>
             <h1>Match</h1>
-            <input onChange={onChange} value={userMessage} type='text' />
-
             {users.map(user => (
                 <div>
-                    {user.userID}: {user.message}
+                    {user.userID}:
+                    {user.userID === socket.id ? (
+                        <input
+                            onChange={onChange}
+                            value={userMessage}
+                            type='text'
+                            placeholder='your action'
+                        />
+                    ) : (
+                        <span>{user.message}</span>
+                    )}
                 </div>
             ))}
         </div>
