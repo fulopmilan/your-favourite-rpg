@@ -20,7 +20,6 @@ export const Game = () => {
             setDidMatchStart(true);
         }
         const updateUserList = (newUserList: string[]) => {
-            console.log(newUserList)
             setUserList(newUserList);
         }
 
@@ -34,7 +33,7 @@ export const Game = () => {
 
     return (
         <div>
-            {didMatchStart ? <Match users={userList} /> : <Lobby users={userList} />}
+            {didMatchStart ? <Match userIDs={userList} /> : <Lobby userIDs={userList} />}
         </div>
     )
 }

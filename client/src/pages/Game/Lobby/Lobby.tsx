@@ -1,10 +1,10 @@
 import { socket } from '../../../data/socket';
 
 interface LobbyProps {
-    users: string[];
+    userIDs: string[];
 }
 
-export const Lobby: React.FC<LobbyProps> = ({ users }) => {
+export const Lobby: React.FC<LobbyProps> = ({ userIDs }) => {
     const onStart = () => {
         socket.emit("startMatch");
     }
@@ -15,8 +15,8 @@ export const Lobby: React.FC<LobbyProps> = ({ users }) => {
             <button onClick={onStart}>Start</button>
 
             <h1>Players</h1>
-            {users.map((user) => (
-                <p>{user}</p>
+            {userIDs.map((userID) => (
+                <p>{userID}</p>
             ))}
         </div>
     )

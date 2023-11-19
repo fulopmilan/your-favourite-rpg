@@ -46,7 +46,6 @@ io.on("connection", (socket: Socket) => {
                 console.log("Room does not exist or is empty.");
             }
         }
-
         else {
             //TODO: redirect this client with a message
             console.log("room is full")
@@ -55,6 +54,10 @@ io.on("connection", (socket: Socket) => {
         socket.on('startMatch', () => {
             io.to(roomId).emit("onStartMatch");
         });
+
+        socket.on('userMessageChange', (userMessage) => {
+            io.to(roomId).emit("receiveMessage", userMessage, socket.id)
+        })
 
         socket.on('disconnect', () => {
             const usersInRoomSet = io.sockets.adapter.rooms.get(roomId);
