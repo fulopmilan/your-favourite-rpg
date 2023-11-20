@@ -73,7 +73,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
     //#region after the text has finished displaying, this timer will start
     let counter = 0;
     const waitBeforeAction = () => {
-        if (counter < 20) {
+        if (counter < 10) {
             setTimeout(() => {
                 setTimer((prevTimer) => prevTimer + 1)
                 counter++;
@@ -97,7 +97,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
             if (counter < storyText.length) {
                 setStoryDisplay((prevDisplay) => prevDisplay + storyText[counter - 1]);
                 counter += 1;
-                setTimeout(displayText, 35);
+                setTimeout(displayText, 20);
             }
             else if (storyText.length !== 0) {
                 counter = 0;
