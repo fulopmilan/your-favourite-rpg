@@ -48,15 +48,17 @@ interface MessageData {
 
 const roomData: { [roomId: string]: RoomData } = {};
 
-async function callAi(messages: MessageData[], storyText: string, roomId: string) {
+async function callAi(messages: MessageData[], roomId: string) {
+    console.log("called ai")
     try {
         const completion = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: "gpt-4-1106-preview", /*"gpt-3.5-turbo-1106",*/
             messages: messages,
         });
 
         const answer = completion.choices[0].message.content;
         if (answer !== "") {
+            console.log(answer);
             io.to(roomId).emit("getStoryText", answer);
         }
     } catch (error: any) {
@@ -67,9 +69,8 @@ async function callAi(messages: MessageData[], storyText: string, roomId: string
 io.on("connection", (socket: Socket) => {
     socket.on('joinRoom', (roomId) => {
         const messageData: MessageData[] = [
-            { role: "system", content: "you're an RPG game master. I provide character names, you write a very short story. I'll respond with a character's action. Your response should end with the sentence 'What will you do next?' Characters have 1 action per your message. Keep it brief and easy for new English speakers. Avoid uncommon words." }
+            { role: "system", content: "you're an rpg game master. you must cooperate with the players to make a fun and exciting story. players give you response for the continuation. the ending of your message should contain something that helps each player decide about the continuation of the story. write everything in a single paragraph and do not break the 4th wall. max 70 words. use english that noobs can also understand" }
         ];
-        let storyText = "placeholder";
         //console.log(socket.id + " joined to room " + roomId)
 
         const updateUserList = () => {
@@ -82,8 +83,6 @@ io.on("connection", (socket: Socket) => {
                 const nicknamesInRoom = usersInRoom.map(socketId => io.sockets.sockets.get(socketId).data.nickname);
 
                 io.to(roomId).emit("updateUserList", usersInRoom, nicknamesInRoom);
-            } else {
-                console.log("room does not exist or is empty.");
             }
         }
 
@@ -154,7 +153,7 @@ io.on("connection", (socket: Socket) => {
                     });
 
                     messageData.push({ role: "user", content: sortedUserMessage });
-                    callAi(messageData, storyText, roomId)
+                    callAi(messageData, roomId)
                 }
                 else {
                     //very first round of the match
@@ -171,7 +170,7 @@ io.on("connection", (socket: Socket) => {
                         });
 
                         messageData.push({ role: "user", content: nicknames });
-                        callAi(messageData, storyText, roomId)
+                        callAi(messageData, roomId)
                     }
                 }
 

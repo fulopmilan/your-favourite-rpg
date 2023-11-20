@@ -39,7 +39,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
         setUsers(initialUsers);
 
         socket.emit('readyToContinue');
-    }, [userIDs])
+    }, [])
     //#endregion
 
     //#region receiving server-side functions
@@ -73,7 +73,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
     //#region after the text has finished displaying, this timer will start
     let counter = 0;
     const waitBeforeAction = () => {
-        if (counter < 10) {
+        if (counter < 20) {
             setTimeout(() => {
                 setTimer((prevTimer) => prevTimer + 1)
                 counter++;
@@ -83,7 +83,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
         else {
             counter = 0;
             setTimer(0);
-            setUserMessage('');
+
             socket.emit('readyToContinue', usersRef.current);
         }
     }
@@ -107,6 +107,12 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
 
         setStoryDisplay('');
         displayText();
+
+        //on new text, reset the messages
+        setUserMessage('');
+        users.forEach(user => {
+            user.message = "";
+        })
     }, [storyText]);
     //#endregion
 
