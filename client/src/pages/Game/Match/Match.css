@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Kurale&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kirang+Haerang&display=swap');
+
+#storytext-container {
+    margin: 100px auto 50px;
+    width: 1000px;
+    border-radius: 15px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.20) 100%);
+    overflow: scroll;
+    height: 300px;
+
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    padding: 30px;
+}
+
+#storytext-container::-webkit-scrollbar {
+    display: none
+}
+
+#storytext {
+    display: flex;
+    margin: 0 auto;
+    max-width: 950px;
+    flex-direction: column;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    text-align: center;
+    font: 40px Kurale;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), #FFF 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+
+
+.user-bubble-player-name {
+    margin: 0 auto;
+    width: 400px;
+    height: 50px;
+    flex-shrink: 0;
+    color: #FFF;
+    text-align: center;
+    font-family: Kirang Haerang;
+    font-size: 36px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.user-bubble {
+    padding: 20px;
+    margin: 0px 25px;
+    width: 400px;
+    height: 250px;
+    flex-shrink: 0;
+    border-radius: 15px;
+    background: rgba(217, 217, 217, 0.30);
+
+    text-align: center;
+    font-family: Kurale;
+    font-size: 40px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.user-bubble textarea,
+.user-bubble p {
+    width: 98%;
+    height: 90%;
+    overflow-y: none;
+    margin: 0px;
+    word-break: break-word;
+    resize: none;
+    color: white;
+    border: none;
+    background: none;
+    outline: none;
+
+    text-align: center;
+    font-family: Kurale;
+    font-size: 32px;
+    font-style: normal;
+    line-height: normal;
+}
+
+.user-bubble textarea::-webkit-scrollbar {
+    display: none;
+}
+
+.user-bubble-container {
+    width: 100%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#timer {
+    font-size: 24px;
+    text-align: center;
+}

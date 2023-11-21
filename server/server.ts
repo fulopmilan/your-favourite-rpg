@@ -39,7 +39,7 @@ const roomData: { [roomId: string]: RoomData } = {};
 io.on("connection", (socket: Socket) => {
     socket.on('joinRoom', (roomId) => {
         let messageData: MessageData[] = [
-            { role: "system", content: "you're a tabletop rpg game master. act like a human. do not break character. do not let players make up random scenes, characters or objects, that aren't in the story. the player can do pretty much everything thats realistic, including magic if they are magicians, or randomly dancing, singing etc... however if they aren't magicians, they shouldn't be able to fly or teleport for example. every player can act after your message, and you must complete their request in message, or atleast react to it. do not start a new storyline after your first message, always continue the current one. i'll provide you the player names. max 100 words per message." }
+            { role: "system", content: "you're a tabletop rpg game master. act like a human. do not break character. do not let players make up random scenes, characters or objects, that aren't in the story. the player can do pretty much everything thats realistic, including magic if they are magicians, or randomly dancing, singing etc... however if they aren't magicians, they shouldn't be able to fly or teleport for example. every player can act after your message, and you must complete their request in message, or atleast react to it. do not start a new storyline after your first message, always continue the current one. i'll provide you the player names. IMPORTANT: use up to 100 words per your message." }
         ];
         //console.log(socket.id + " joined to room " + roomId)
 
@@ -113,6 +113,9 @@ io.on("connection", (socket: Socket) => {
                             message: string;
                         }) => {
 
+                        if (user.message === "")
+                            user.message = "nothing";
+
                         userMessages.push({ userName: user.nickname, message: user.message });
                     });
 
@@ -127,7 +130,7 @@ io.on("connection", (socket: Socket) => {
                     if (messageData.length > 5) {
                         messageData.splice(1, 1);
                     }
-                    console.log(messageData);
+                    console.log(messageData, messageData.length);
 
                     callAi(messageData, roomId, io)
                 }

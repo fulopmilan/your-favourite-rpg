@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { socket } from '../../../data/socket';
+import './Match.css';
 
 interface MatchProps {
     userIDs: string[];
@@ -22,7 +23,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
     const [storyDisplay, setStoryDisplay] = useState<string>("");
 
     //timer after the text finishes displaying
-    const [timer, setTimer] = useState<number>(0);
+    const [timer, setTimer] = useState<number>(30);
 
     const usersRef = useRef(users);
     useEffect(() => {
@@ -57,7 +58,6 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
         }
 
         const getStoryText = (newStoryText: string) => {
-            console.log(newStoryText);
             setStoryText(newStoryText)
         }
 
@@ -71,18 +71,18 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
     //#endregion
 
     //#region after the text has finished displaying, this timer will start
-    let counter = 0;
+    let counter = 30;
     const waitBeforeAction = () => {
-        if (counter < 10) {
+        if (counter > 0) {
             setTimeout(() => {
-                setTimer((prevTimer) => prevTimer + 1)
-                counter++;
+                setTimer((prevTimer) => prevTimer - 1)
+                counter--;
                 waitBeforeAction();
             }, 1000)
         }
         else {
-            counter = 0;
-            setTimer(0);
+            counter = 30;
+            setTimer(30);
 
             socket.emit('readyToContinue', usersRef.current);
         }
@@ -97,7 +97,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
             if (counter < storyText.length) {
                 setStoryDisplay((prevDisplay) => prevDisplay + storyText[counter - 1]);
                 counter += 1;
-                setTimeout(displayText, 20);
+                setTimeout(displayText, 35);
             }
             else if (storyText.length !== 0) {
                 counter = 0;
@@ -116,32 +116,37 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
     }, [storyText]);
     //#endregion
 
-    const onChange = (v: React.FormEvent<HTMLInputElement>) => {
+    const onChange = (v: React.FormEvent<HTMLTextAreaElement>) => {
         setUserMessage(v.currentTarget.value);
         socket.emit("userMessageChange", v.currentTarget.value);
     }
 
     return (
         <div>
-            {timer}
-            <h1>Match</h1>
-            {users.map(user => (
-                <div>
-                    {user.nickname}:
-                    {user.userID === socket.id ? (
-                        <input
-                            onChange={onChange}
-                            value={userMessage}
-                            type='text'
-                            placeholder='your action'
-                        />
-                    ) : (
-                        <span>{user.message}</span>
-                    )}
-                </div>
-            ))}
-            <p>Story</p>
-            {storyDisplay}
+            <div id='storytext-container'>
+                <p id='storytext'>{storyDisplay}</p>
+            </div>
+            <div className='user-bubble-container'>
+                {users.map(user => (
+                    <div>
+                        <p className='user-bubble-player-name'>{user.nickname}</p>
+                        <div className='user-bubble'>
+                            {user.userID === socket.id ? (
+                                <textarea
+                                    onChange={onChange}
+                                    value={userMessage}
+                                    placeholder='your action'
+                                    autoFocus={true}
+                                    onBlur={({ target }) => target.focus()}
+                                />
+                            ) : (
+                                <p>{user.message}</p>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            <p id='timer'>{timer}</p>
         </div>
     )
 }
