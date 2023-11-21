@@ -1,15 +1,12 @@
 //#region imports & requirements
 import { Socket } from "socket.io";
+import { callAi } from "./utils/callAi";
+
+import { MessageData } from "./data/interfaces/MessageData";
+import { RoomData } from "./data/interfaces/RoomData";
 
 //DOTENV
 require('dotenv').config();
-
-//OpenAI
-const OpenAIApi = require('openai');
-const openai = new OpenAIApi({
-    apiKey: process.env.OPENAI_API_KEY
-});
-//
 
 const express = require('express');
 const app = express();
@@ -37,41 +34,12 @@ const io = new Server(server, {
 });
 //#endregion
 
-interface RoomData {
-    hasMatchStarted: Boolean;
-    readyPlayers: number;
-}
-interface MessageData {
-    role: string;
-    content: string;
-}
-
 const roomData: { [roomId: string]: RoomData } = {};
-
-async function callAi(messages: MessageData[], roomId: string) {
-    console.log("called ai")
-    try {
-        const completion = await openai.chat.completions.create({
-            model: /*"gpt-4-1106-preview",*/ "gpt-3.5-turbo-1106",
-            messages: messages,
-        });
-
-        const answer = completion.choices[0].message.content;
-        if (answer !== "") {
-            console.log(answer);
-            messages.push({ role: "assistant", content: answer })
-
-            io.to(roomId).emit("getStoryText", answer);
-        }
-    } catch (error: any) {
-        console.error("Error calling OpenAI API:", error.message);
-    }
-}
 
 io.on("connection", (socket: Socket) => {
     socket.on('joinRoom', (roomId) => {
-        const messageData: MessageData[] = [
-            { role: "system", content: "you're a tabletop rpg game master. act like a human. do not break character. cooperate with the players to make up a story. every player can act after your message, and you must complete their request in message, or atleast react to it. do not start a new storyline after your first message, always continue the current one. i'll provide you the player names. use up to 100 words each message." }
+        let messageData: MessageData[] = [
+            { role: "system", content: "you're a tabletop rpg game master. act like a human. do not break character. do not let players make up random scenes, characters or objects, that aren't in the story. the player can do pretty much everything thats realistic, including magic if they are magicians, or randomly dancing, singing etc... however if they aren't magicians, they shouldn't be able to fly or teleport for example. every player can act after your message, and you must complete their request in message, or atleast react to it. do not start a new storyline after your first message, always continue the current one. i'll provide you the player names. max 100 words per message." }
         ];
         //console.log(socket.id + " joined to room " + roomId)
 
@@ -155,8 +123,13 @@ io.on("connection", (socket: Socket) => {
                     });
 
                     messageData.push({ role: "user", content: sortedUserMessage });
+
+                    if (messageData.length > 5) {
+                        messageData.splice(1, 1);
+                    }
                     console.log(messageData);
-                    callAi(messageData, roomId)
+
+                    callAi(messageData, roomId, io)
                 }
                 else {
                     //very first round of the match
@@ -173,7 +146,7 @@ io.on("connection", (socket: Socket) => {
                         });
 
                         messageData.push({ role: "user", content: nicknames });
-                        callAi(messageData, roomId)
+                        callAi(messageData, roomId, io)
                     }
                 }
 
