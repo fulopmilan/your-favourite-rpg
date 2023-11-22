@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { socket } from '../../../data/socket';
+import './Lobby.css'
 
 interface LobbyProps {
     userIDs: string[];
@@ -22,22 +23,19 @@ export const Lobby: React.FC<LobbyProps> = ({ userIDs, nicknames }) => {
     }
 
     return (
-        <div>
-            <h1>Lobby</h1>
-            <button onClick={onStart}>Start</button>
-
+        <div id='lobby-container'>
             <h1>Players</h1>
             {nicknames.map((nickname, index) => (
                 <div>
-                    <p>{nickname}</p>
-                    {userIDs[index] === socket.id &&
+                    {userIDs[index] === socket.id ?
                         <div>
                             <input onChange={onChange} type='text' placeholder='username' />
-                            <button onClick={onRename}>submit</button>
+                            <button onClick={onRename}>rename</button>
                         </div>
-                    }
+                        : <p>{nickname}</p>}
                 </div>
             ))}
+            <button onClick={onStart}>Start</button>
         </div>
     )
 }

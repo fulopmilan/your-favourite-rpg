@@ -12,6 +12,10 @@ interface UserProp {
     message: string;
 }
 
+const timeForResponse: number = 30;
+const timeBetweenCharacterAppearance: number = 35;
+const userMessageMaxLength: number = 100;
+
 export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
 
     const [users, setUsers] = useState<UserProp[]>([]);
@@ -23,7 +27,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
     const [storyDisplay, setStoryDisplay] = useState<string>("");
 
     //timer after the text finishes displaying
-    const [timer, setTimer] = useState<number>(30);
+    const [timer, setTimer] = useState<number>(timeForResponse);
 
     const usersRef = useRef(users);
     useEffect(() => {
@@ -71,7 +75,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
     //#endregion
 
     //#region after the text has finished displaying, this timer will start
-    let counter = 30;
+    let counter = timeForResponse;
     const waitBeforeAction = () => {
         if (counter > 0) {
             setTimeout(() => {
@@ -81,8 +85,8 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
             }, 1000)
         }
         else {
-            counter = 30;
-            setTimer(30);
+            counter = timeForResponse;
+            setTimer(timeForResponse);
 
             socket.emit('readyToContinue', usersRef.current);
         }
@@ -97,7 +101,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
             if (counter < storyText.length) {
                 setStoryDisplay((prevDisplay) => prevDisplay + storyText[counter - 1]);
                 counter += 1;
-                setTimeout(displayText, 35);
+                setTimeout(displayText, timeBetweenCharacterAppearance);
             }
             else if (storyText.length !== 0) {
                 counter = 0;
@@ -117,8 +121,12 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
     //#endregion
 
     const onChange = (v: React.FormEvent<HTMLTextAreaElement>) => {
-        setUserMessage(v.currentTarget.value);
-        socket.emit("userMessageChange", v.currentTarget.value);
+        const userMessage = v.currentTarget.value;
+
+        if (userMessage.length <= userMessageMaxLength)
+            setUserMessage(userMessage);
+
+        socket.emit("changeUserMessage", v.currentTarget.value);
     }
 
     return (
