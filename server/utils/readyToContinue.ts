@@ -1,8 +1,12 @@
 import { Server as SocketIOServer, Socket } from "socket.io";
 import { RoomData } from "../data/interfaces/RoomData";
 import { MessageData } from "../data/interfaces/MessageData";
-import { callAi } from "./callAi";
-import { callSummarizingAi } from "./callSummarizingAi";
+import { callAi } from "./AI/callAi";
+import { callSummarizingAi } from "./AI/callSummarizingAi";
+
+//after (number) amount of messages are present in the prompt, 
+//lets summarize the previous events so we'll save some tokens.
+const messagesAfterSummary: number = 8;
 
 export const readyToContinue = (socket: Socket, io: SocketIOServer, roomData: RoomData, messageData: MessageData[], roomId: string) => {
     socket.on('readyToContinue', (users?) => {
@@ -12,7 +16,6 @@ export const readyToContinue = (socket: Socket, io: SocketIOServer, roomData: Ro
         const readyPlayers = roomData.readyPlayers;
 
         const callLocalAi = () => {
-            console.log("fasz")
             callAi(messageData, roomId, io)
         }
 
@@ -28,14 +31,13 @@ export const readyToContinue = (socket: Socket, io: SocketIOServer, roomData: Ro
                         message: string;
                     }) => {
 
+                    //the prompt was left empty
                     if (user.message === "")
                         user.message = "stand";
 
                     userMessages.push({ nickName: user.nickname, message: user.message });
                 });
 
-                //format: 
-                //(username):(usermessage), ...
                 let sortedUserMessage: string = "";
 
                 userMessages.forEach(userMessage => {
@@ -45,8 +47,7 @@ export const readyToContinue = (socket: Socket, io: SocketIOServer, roomData: Ro
                 messageData.push({ role: "user", content: sortedUserMessage });
 
                 //to prevent overloading tokens, we'll summarize every past message
-                //(1st message is the instruction, we must keep that.)
-                if (messageData.length >= 8) {
+                if (messageData.length >= messagesAfterSummary) {
                     callSummarizingAi(messageData, callLocalAi);
                     messageData.splice(1, 3);
                 }

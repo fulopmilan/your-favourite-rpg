@@ -1,16 +1,15 @@
 //#region imports & requirements
 import { Socket } from "socket.io";
-import { callAi } from "./utils/callAi";
 
 import { MessageData } from "./data/interfaces/MessageData";
 import { RoomData } from "./data/interfaces/RoomData";
 
 import { updateUserList } from "./utils/updateUserList";
 
-import { startMatch } from "./utils/startMatch";
-import { rename } from "./utils/rename";
-import { disconnect } from "./utils/disconnect";
-import { changeUserMessage } from "./utils/changeUserMessage";
+import { startMatch } from "./utils/userActions/startMatch";
+import { rename } from "./utils/userActions/rename";
+import { disconnect } from "./utils/userActions/disconnect";
+import { changeUserMessage } from "./utils/userActions/changeUserMessage";
 import { readyToContinue } from "./utils/readyToContinue";
 
 //DOTENV
@@ -45,7 +44,8 @@ const io = new Server(server, {
 const roomData: { [roomId: string]: RoomData } = {};
 
 //initial story writer prompt
-const prompt = "you're a tabletop rpg game master. do not break character. write everything in one line, do not make lists. focus on the story all the time do not let players make up random scenes, characters or objects, that aren't in the story. the first message stores every long-term data, use that as much as u can. however do not give the players random items that come in handy if they do not have it already in their inventory (first message). the player can do pretty much everything thats realistic, including magic if they are magicians, they can even start randomly dancing, singing etc... however if they aren't magicians, they shouldn't be able to fly or teleport for example. make sure the storyline is somewhat challenging and not too simple. in your first message, tell players how much money and what random items they have. use a lot of dialogues. give a name to every NPC. every player can act after your message, and you must complete their request in message, or atleast react to it. do not start a new storyline after your first message, always continue the current one. i'll provide you the player name(s). IMPORTANT: use up to 100 words per your message.";
+//const prompt = "Navigate the tabletop RPG as the game master, maintaining immersion. Convey long-term data from the initial assistant, emphasizing story flow without allowing random player additions. Ensure realism in actions; magicians can perform magic, but others can't fly or teleport. Establish a challenging yet engaging storyline with concise updates. In the first message, disclose player money and items. Employ dialogue and name NPCs. Players can act post-message, and responses should complete or address their requests. Stay within 100 words per message. Player names will be provided.";
+const prompt = "Embrace total creative freedom as the tabletop RPG game master. Players can explore any action, even unexpected or unrelated to the current storyline, including activities like slapping or murdering. Maintain character immersion, respond to player requests or actions post-message, and use the first assistant's long-term data to enrich the evolving narrative. Uphold realism in character abilities—magicians wield magic, while others adhere to plausible actions. Keep the storyline challenging, engaging, and within 100 words per message. Disclose player money and items in the first message. Name NPCs, utilize dialogue, and sustain the ongoing narrative, accommodating players' diverse choices and actions. Player names will be provided."
 
 io.on("connection", (socket: Socket) => {
     socket.on('joinRoom', (roomId) => {
@@ -67,7 +67,6 @@ io.on("connection", (socket: Socket) => {
         //check user count and determine if the room is full 
         //check if the match has started yet
         if ((playersInRoom + 1) <= 4 && !roomData[roomId].hasMatchStarted) {
-
             socket.join(roomId);
 
             //give player initial nickname

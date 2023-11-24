@@ -1,4 +1,4 @@
-import { MessageData } from "../data/interfaces/MessageData";
+import { MessageData } from "../../data/interfaces/MessageData";
 require('dotenv').config();
 
 //OpenAI
@@ -14,13 +14,11 @@ export async function callAi(messages: MessageData[], roomId: string, io: any) {
             model: /*"gpt-4-1106-preview",*/ "gpt-3.5-turbo-1106",
             messages: messages,
         });
-        console.log("post completion")
 
         const answer = completion.choices[0].message.content;
-        if (answer !== "") {
+        if (answer) {
             messages.push({ role: "assistant", content: answer })
 
-            console.log(messages)
             io.to(roomId).emit("getStoryText", answer);
         }
     } catch (error: any) {

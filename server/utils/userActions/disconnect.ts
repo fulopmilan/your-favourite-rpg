@@ -1,6 +1,6 @@
 import { Server as SocketIOServer, Socket } from "socket.io";
-import { RoomData } from "../data/interfaces/RoomData";
-import { updateUserList } from "./updateUserList";
+import { RoomData } from "../../data/interfaces/RoomData";
+import { updateUserList } from "../updateUserList";
 
 export const disconnect = (socket: Socket, io: SocketIOServer, roomData: RoomData, roomId: string) => {
     socket.on('disconnect', () => {
