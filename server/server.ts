@@ -43,7 +43,9 @@ const io = new Server(server, {
 //#endregion
 
 const roomData: { [roomId: string]: RoomData } = {};
-const prompt = "you're a tabletop rpg game master. act like a human. do not break character. do not let players make up random scenes, characters or objects, that aren't in the story. the player can do pretty much everything thats realistic, including magic if they are magicians, or randomly dancing, singing etc... however if they aren't magicians, they shouldn't be able to fly or teleport for example. make sure the storyline is somewhat challenging and not too simple. every player can act after your message, and you must complete their request in message, or atleast react to it. do not start a new storyline after your first message, always continue the current one. i'll provide you the player names. IMPORTANT: use up to 100 words per your message.";
+
+//initial story writer prompt
+const prompt = "you're a tabletop rpg game master. do not break character. write everything in one line, do not make lists. focus on the story all the time do not let players make up random scenes, characters or objects, that aren't in the story. the first message stores every long-term data, use that as much as u can. however do not give the players random items that come in handy if they do not have it already in their inventory (first message). the player can do pretty much everything thats realistic, including magic if they are magicians, they can even start randomly dancing, singing etc... however if they aren't magicians, they shouldn't be able to fly or teleport for example. make sure the storyline is somewhat challenging and not too simple. in your first message, tell players how much money and what random items they have. use a lot of dialogues. give a name to every NPC. every player can act after your message, and you must complete their request in message, or atleast react to it. do not start a new storyline after your first message, always continue the current one. i'll provide you the player name(s). IMPORTANT: use up to 100 words per your message.";
 
 io.on("connection", (socket: Socket) => {
     socket.on('joinRoom', (roomId) => {

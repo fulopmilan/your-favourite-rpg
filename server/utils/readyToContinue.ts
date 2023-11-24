@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import { RoomData } from "../data/interfaces/RoomData";
 import { MessageData } from "../data/interfaces/MessageData";
 import { callAi } from "./callAi";
+import { callSummarizingAi } from "./callSummarizingAi";
 
 export const readyToContinue = (socket: Socket, io: SocketIOServer, roomData: RoomData, messageData: MessageData[], roomId: string) => {
     socket.on('readyToContinue', (users?) => {
@@ -9,6 +10,11 @@ export const readyToContinue = (socket: Socket, io: SocketIOServer, roomData: Ro
 
         const playersInRoom = io.sockets.adapter.rooms.get(roomId)?.size ?? 0;
         const readyPlayers = roomData.readyPlayers;
+
+        const callLocalAi = () => {
+            console.log("fasz")
+            callAi(messageData, roomId, io)
+        }
 
         if (readyPlayers >= playersInRoom) {
 
@@ -23,7 +29,7 @@ export const readyToContinue = (socket: Socket, io: SocketIOServer, roomData: Ro
                     }) => {
 
                     if (user.message === "")
-                        user.message = "random";
+                        user.message = "stand";
 
                     userMessages.push({ nickName: user.nickname, message: user.message });
                 });
@@ -38,13 +44,15 @@ export const readyToContinue = (socket: Socket, io: SocketIOServer, roomData: Ro
 
                 messageData.push({ role: "user", content: sortedUserMessage });
 
-                //to prevent overloading tokens, we'll delete the 2nd message after every run
+                //to prevent overloading tokens, we'll summarize every past message
                 //(1st message is the instruction, we must keep that.)
-                if (messageData.length > 5) {
-                    messageData.splice(1, 1);
+                if (messageData.length >= 8) {
+                    callSummarizingAi(messageData, callLocalAi);
+                    messageData.splice(1, 3);
                 }
-
-                callAi(messageData, roomId, io)
+                else {
+                    callLocalAi();
+                }
             }
             else {
                 //it must be the first round of the match

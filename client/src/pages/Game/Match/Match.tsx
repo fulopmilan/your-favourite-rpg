@@ -12,7 +12,7 @@ interface UserProp {
     message: string;
 }
 
-const timeForResponse: number = 30;
+const timeForResponse: number = 10;
 const timeBetweenCharacterAppearance: number = 35;
 const userMessageMaxLength: number = 100;
 

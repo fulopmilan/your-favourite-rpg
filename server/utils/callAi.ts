@@ -10,7 +10,6 @@ const openai = new OpenAIApi({
 
 export async function callAi(messages: MessageData[], roomId: string, io: any) {
     try {
-        console.log("called ai")
         const completion = await openai.chat.completions.create({
             model: /*"gpt-4-1106-preview",*/ "gpt-3.5-turbo-1106",
             messages: messages,
@@ -19,9 +18,9 @@ export async function callAi(messages: MessageData[], roomId: string, io: any) {
 
         const answer = completion.choices[0].message.content;
         if (answer !== "") {
-            console.log(answer);
             messages.push({ role: "assistant", content: answer })
 
+            console.log(messages)
             io.to(roomId).emit("getStoryText", answer);
         }
     } catch (error: any) {
