@@ -8,7 +8,7 @@ after a specific amount of messages, a summary for long-term memory is going to 
 
 ## good to know
 since the front-end isn't done yet, the site may break on mobile devices.
-i might come back to this project later and upgrade it later with some new features.
+i might come back to this project later and upgrade it with some new features.
 
 ## how to setup
 ### client side
