@@ -1,4 +1,4 @@
-# your-favourite-rpg
+# ai-rpg
 this is a website that lets you experience a real-time table-top RPG either alone, or with up to 4 players, while an AI is controlling the game. it was made using the MERN stack.
 
 ## how does it work?
