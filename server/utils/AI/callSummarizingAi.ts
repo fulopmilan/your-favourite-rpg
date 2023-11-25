@@ -1,4 +1,5 @@
 import { MessageData } from "../../data/interfaces/MessageData";
+import { removeConjunctions } from "../optimizer/removeConjunctions";
 require('dotenv').config();
 
 //OpenAI
@@ -30,7 +31,7 @@ export async function callSummarizingAi(storyMessages: MessageData[], callLocalA
 
         const answer = completion.choices[0].message.content;
         if (answer) {
-            storyMessages.splice(1, 0, { role: "assistant", content: answer });
+            storyMessages.splice(1, 0, { role: "assistant", content: removeConjunctions(answer) });
             callLocalAi();
         }
     } catch (error: any) {

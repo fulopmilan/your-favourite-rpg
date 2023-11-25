@@ -1,4 +1,6 @@
 import { MessageData } from "../../data/interfaces/MessageData";
+import { removeConjunctions } from "../optimizer/removeConjunctions";
+
 require('dotenv').config();
 
 //OpenAI
@@ -17,7 +19,7 @@ export async function callAi(messages: MessageData[], roomId: string, io: any) {
 
         const answer = completion.choices[0].message.content;
         if (answer) {
-            messages.push({ role: "assistant", content: answer })
+            messages.push({ role: "assistant", content: removeConjunctions(answer) })
 
             io.to(roomId).emit("getStoryText", answer);
         }
