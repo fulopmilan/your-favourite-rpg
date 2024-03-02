@@ -1,4 +1,5 @@
 //#region imports & requirements
+import { Request, Response } from "express";
 import { Socket } from "socket.io";
 
 import { MessageData } from "./data/interfaces/MessageData";
@@ -11,6 +12,8 @@ import { rename } from "./utils/userActions/rename";
 import { disconnect } from "./utils/userActions/disconnect";
 import { changeUserMessage } from "./utils/userActions/changeUserMessage";
 import { readyToContinue } from "./utils/readyToContinue";
+
+import path from 'path';
 
 //DOTENV
 require('dotenv').config();
@@ -30,6 +33,10 @@ app.use(cors({
     origin: process.env.ORIGIN,
     credentials: true,
 }));
+
+app.use(express.static(path.join(__dirname, '/client/build')));
+
+app.get('*', (req: Request, res: Response) => res.sendFile(path.join(__dirname, '/client/build/index.html')))
 
 const io = new Server(server, {
     cors: {
