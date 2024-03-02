@@ -1,8 +1,8 @@
 import { MessageData } from "../../data/interfaces/MessageData";
 import { removeConjunctions } from "../optimizer/removeConjunctions";
+import dotenv from 'dotenv';
 
-require('dotenv').config();
-
+dotenv.config();
 //OpenAI
 const OpenAIApi = require('openai');
 const openai = new OpenAIApi({
