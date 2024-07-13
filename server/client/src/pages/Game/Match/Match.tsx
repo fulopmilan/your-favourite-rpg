@@ -12,7 +12,7 @@ interface UserProp {
     message: string;
 }
 
-const timeForResponse: number = 30;
+const timeForResponse: number = 35;
 const timeBetweenCharacterAppearance: number = 35;
 const userMessageMaxLength: number = 100;
 
@@ -82,7 +82,7 @@ export const Match: React.FC<MatchProps> = ({ userIDs, nicknames }) => {
                 setTimer((prevTimer) => prevTimer - 1)
                 counter--;
                 waitBeforeAction();
-            }, 1000)
+            }, 3000)
         }
         else {
             counter = timeForResponse;
